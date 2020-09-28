@@ -1,28 +1,44 @@
 const notesCtrl = {};
 
-notesCtrl.renderNoteForm =(req, res) =>{
-    res.render('notes/new-note')
-}
+const { json } = require("express");
+const Note = require("../models/Note");
 
-notesCtrl.createNewNote = (req, res) =>{
-    console.log(req.body)
-    res.send('create new note')
-}
+notesCtrl.renderNoteForm = (req, res) => {
+  res.render("notes/new-note");
+};
 
-notesCtrl.renderNotes = (req, res) =>{
-    res.send('render notes')
-}
+notesCtrl.createNewNote = async (req, res) => {
+  const { title, description } = req.body;
 
-notesCtrl.renderEditForm = (req, res) =>{
-    res.send('render edit form')
-}
+  const newNote = new Note({ title, description });
 
-notesCtrl.updateNote = (req, res) =>{
-    res.send('update note')
-}
+  await newNote.save();
+  res.redirect("/notes");
+};
 
-notesCtrl.deleteNote = (req, res) =>{
-    res.send('delete note')
-}
+notesCtrl.renderNotes = async (req, res) => {
+  const notes = await Note.find().lean();
+  res.render("notes/all-notes", { notes });
+};
+
+notesCtrl.renderEditForm = async (req, res) => {
+  const note = await Note.findById(req.params.id).lean();
+  console.log(note);
+  res.render("notes/edit-note", { note });
+};
+
+notesCtrl.updateNote = async (req, res) => {
+  const { title, description } = req.body;
+
+  await Note.findByIdAndUpdate(req.params.id, { title, description });
+
+  res.redirect("/notes");
+};
+
+notesCtrl.deleteNote = async (req, res) => {
+  const note = await Note.findByIdAndDelete(req.params.id);
+  console.log(note);
+  res.redirect("/notes");
+};
 
 module.exports = notesCtrl;
